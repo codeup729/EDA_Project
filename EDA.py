@@ -4,6 +4,7 @@ import PySimpleGUI as sg
 import matplotlib.pyplot as plt
 import sweetviz as sv
 import os
+import webbrowser #for displaying pandas-profiling report on a separate page
 from pandas_profiling import ProfileReport
 # the crux of UI integration is that sometimes you have to have a bridge of sorts, 
 # helper methods or drop down to a level where both libraries can talk to each other, 
@@ -26,8 +27,9 @@ def handle_tools():
     if values['-TOOL-']=='pandas profiling':
         design_report = ProfileReport(df_ht)
         design_report.to_file(output_file='report.html')
+        webbrowser.open('file://' + os.path.realpath('report.html'))
 
-    # Autoviz and pandas profiling code to be completed
+    # Autoviz library issues to be resolved
 
 def viz_window():
     all_columns = list(df.columns)
@@ -61,7 +63,7 @@ def viz_window():
             break
         if event == "-SHOW_PLT-":
             handle_plot(values)
-        #add visualisation functionality with matplotlib
+        #adds visualisation functionality with matplotlib
         
     window.close()
 
@@ -113,6 +115,26 @@ def draw_figure(canvas, figure):
     return figure_canvas_agg
 
 
+
+def handle_model():
+    target_list = list(df.columns)
+    layout = [
+        [
+            sg.Text("Choose Target Variable"),
+            sg.Combo(target_list,default_value=target_list[0],size=(25,1),
+            key='-TARGET-')
+        ],
+        [sg.Button("Fit",enable_events=True,size=(25,1),key="-FIT-")]
+    ]
+    window = sg.Window("Model Fit Window",layout)
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED,"Exit"):
+            break
+    window.close()
+        #To add pycaret modelling functionalities to "-FIT-" event
+
+
 file_choose = [
     [
         sg.Text("Data File"),
@@ -142,16 +164,11 @@ plot_choose = [
         # enable_events=True,key="-X-"),
 ]
 
-model_list = ['Linear Regression',"Classification"]
+
 model_choose = [
     [sg.Text("   ")],
     [sg.Text("To Fit a Model:")],
-    [
-        sg.Text("Choose Model: "),
-        sg.Combo(model_list,default_value=model_list[0],size=(25,1),
-        key='-MODEL-')
-    ],
-    [sg.Button("Fit",enable_events=True,size=(25,1),key="-VIZ-")]
+    [sg.Button("Click here",enable_events=True,size=(25,1),key="-MODEL-")]
 ]
 
 
@@ -171,5 +188,7 @@ while True:
         handle_tools()
     if event == '-VIZ-':
         viz_window()
+    if event == '-MODEL-':
+        handle_model()
 
 window.close()

@@ -11,6 +11,7 @@ from pandas_profiling import ProfileReport
 # in this case a tkinter canvas.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 #from autoviz.AutoViz_Class import AutoViz_Class
+#from lightgbm import LGBMClassifier as lgbmc
 
 def handle_tools():
     path_ht = values['-IN-']
@@ -42,10 +43,10 @@ def viz_window():
         ],
         [
             sg.Text("Y axis: "),
-            sg.Combo(all_columns,default_value=all_columns[0],
-            enable_events=True,key="-Y-")
-            # sg.Listbox(all_columns,default_values=[all_columns[0]],
-            # enable_events=True,select_mode='multiple',size=(25,1),key="-Y-")
+            # sg.Combo(all_columns,default_value=all_columns[0],
+            # enable_events=True,key="-Y-")
+            sg.Listbox(all_columns,default_values=[all_columns[0]],
+            enable_events=True,select_mode='multiple',size=(25,1),key="-Y-")
         ],
         [
             sg.Text("Plot: "),
@@ -77,12 +78,13 @@ def handle_plot(values):
     _VARS['window'] = sg.Window('Graph Window',layout,finalize=True,resizable=True,
     element_justification="right")
 
+    list_val = list(values["-Y-"]) # to plot multiple y axes
     if values["-PLOT-"] == 'scatter':
         f, ax = plt.subplots(figsize=(15,15))
         plt.title('Scatter Plot')
         ax2 = ax.twinx()
-
-        ax.scatter(df[values["-X-"]], df[values["-Y-"]])
+        for i in range(len(list_val)):
+            ax.scatter(df[values["-X-"]], df[list_val[i]],label=list_val[i])
         ax.set_xlabel(values["-X-"])
         ax.legend(loc='upper right')
         # Instead of plt.show
@@ -92,8 +94,8 @@ def handle_plot(values):
         f, ax = plt.subplots(figsize=(20,15))
         plt.title('Line Plot')
         ax2 = ax.twinx()
-
-        ax.plot(df[values["-X-"]], df[values["-Y-"]])
+        for i in range(len(list_val)):
+            ax.plot(df[values["-X-"]], df[list_val[i]],label=list_val[i])
         ax.set_xlabel(values["-X-"])
         ax.legend(loc='upper right')
          # Instead of plt.show
@@ -117,8 +119,14 @@ def draw_figure(canvas, figure):
 
 
 def handle_model():
+    model_list = ["Regression","Classification"]
     target_list = list(df.columns)
     layout = [
+        [
+            sg.Text("Choose Model"),
+            sg.Combo(model_list,default_value=model_list[0],size=(25,1),
+            key="-MODEL_FIT-")
+        ],
         [
             sg.Text("Choose Target Variable"),
             sg.Combo(target_list,default_value=target_list[0],size=(25,1),
@@ -131,9 +139,25 @@ def handle_model():
         event, values = window.read()
         if event in (sg.WIN_CLOSED,"Exit"):
             break
+        if event == "-FIT-":
+            handle_pycaret(values)
     window.close()
         #To add pycaret modelling functionalities to "-FIT-" event
 
+# def handle_pycaret(values):
+#     if values["-MODEL_FIT-"] == "Classification":
+#         from pycaret.classification import setup,create_model,compare_models,plot_model
+#         clf1 = setup(df, target = values["-TARGET-"], session_id=786)
+#         extracted_model = compare_models()
+#         model = create_model(extract_model)
+#         plot_model(model)
+
+#     elif values["-MODEL_FIT-"] == "Regression":
+#         from pycaret.regression import setup,create_model,compare_models,plot_model
+#         reg1 = setup(df, target = values["-TARGET-"], session_id=786)
+#         extracted_model = compare_models()
+#         model = create_model(extract_model)
+#         plot_model(model)
 
 file_choose = [
     [

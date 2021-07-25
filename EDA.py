@@ -10,8 +10,8 @@ from pandas_profiling import ProfileReport
 # helper methods or drop down to a level where both libraries can talk to each other, 
 # in this case a tkinter canvas.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-#from autoviz.AutoViz_Class import AutoViz_Class
-#from lightgbm import LGBMClassifier as lgbmc
+# from autoviz.AutoViz_Class import AutoViz_Class
+# from lightgbm import LGBMClassifier as lgbmc
 
 def handle_tools():
     path_ht = values['-IN-']
@@ -208,6 +208,14 @@ while True:
     if event == '-FILE-':
         path = values['-IN-']
         df = pd.read_csv(path)
+        df = df.select_dtypes([np.number]) # removing non-numeric columns
+        df_cleaned = df.dropna()
+        df_max_scaled = df_cleaned.copy()
+        for column in df.columns: # normalising the data (Min-Max Scaling)
+            df_max_scaled[column] = (df_max_scaled[column] - 
+            df_max_scaled[column].min())/(df_max_scaled[column].max() - 
+            df_max_scaled[column].min())
+        df = df_max_scaled
     if event == '-EDA-':
         handle_tools()
     if event == '-VIZ-':

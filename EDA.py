@@ -10,8 +10,9 @@ from pandas_profiling import ProfileReport
 # helper methods or drop down to a level where both libraries can talk to each other, 
 # in this case a tkinter canvas.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# from autoviz.AutoViz_Class import AutoViz_Class
-# from lightgbm import LGBMClassifier as lgbmc
+from autoviz.AutoViz_Class import AutoViz_Class
+from lightgbm import LGBMClassifier as lgbmc
+from sklearn.preprocessing import StandardScaler
 
 def handle_tools():
     path_ht = values['-IN-']
@@ -23,7 +24,7 @@ def handle_tools():
 
     if values['-TOOL-']=='autoviz':
         AV = AutoViz_Class()
-        av = AV.AutoViz(df_ht)
+        av = AV.AutoViz(path_ht,verbose=1)
 
     if values['-TOOL-']=='pandas profiling':
         design_report = ProfileReport(df_ht)
@@ -128,35 +129,106 @@ def handle_model():
             key="-MODEL_FIT-")
         ],
         [
+            sg.Text("Choose Features"),
+            sg.Listbox(target_list,enable_events=True,select_mode='multiple',
+            size=(25,1),key="-FEATURE-")
+        ],
+        [
             sg.Text("Choose Target Variable"),
             sg.Combo(target_list,default_value=target_list[0],size=(25,1),
             key='-TARGET-')
         ],
-        [sg.Button("Fit",enable_events=True,size=(25,1),key="-FIT-")]
+        [
+            sg.Button("Fit",enable_events=True,size=(25,1),key="-FIT-")
+        ],
+        [
+            sg.Text("", size=(50,1),key='-prediction-', pad=(5,5), font='Helvetica 12')
+        ],
+        [
+            sg.ProgressBar(50, orientation='h', size=(100,10), key='progressbar')
+        ],
+        [sg.Text(" ")],
+        [
+            sg.Button("To Predict",enable_events=True,size=(25,1),key="-PREDICT-")
+        ]
     ]
     window = sg.Window("Model Fit Window",layout)
+    progress_bar = window['progressbar']
+    prediction_text = window['-prediction-']
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED,"Exit"):
             break
         if event == "-FIT-":
-            handle_pycaret(values)
+            prediction_text.update("Fitting model...")
+            for i in range(50):
+                event, values = window.read(timeout=10)
+                progress_bar.UpdateBar(i + 1)
+            mod,score = sklearn_model(values)
+            prediction_text.update("Accuracy of Model is: {}%".format(score*100))
+        if event == "-PREDICT-":
+            sklearn_predict(mod,values)
     window.close()
-        #To add pycaret modelling functionalities to "-FIT-" event
+        #To add prediction functionalities 
+
+
+def sklearn_model(values):
+    X = df[list(values["-FEATURE-"])]
+    y = df[values["-TARGET-"]]
+    if values["-MODEL_FIT-"] == "Classification":
+        from sklearn.ensemble import RandomForestClassifier
+        clf = RandomForestClassifier(n_estimators=20,max_depth=4)
+        clf.fit(X,y)
+        return clf, np.round(clf.score(X,y),3)
+    if values["-MODEL_FIT-"] == "Regression":
+        from sklearn.linear_model import LinearRegression
+        regressor = LinearRegression()
+        regressor.fit(X,y)
+        return regressor, np.round(regressor.score(X,y),3)
+
+def sklearn_predict(mod,values):
+    input_col = []
+    feature_col = values["-FEATURE-"]
+    cols = len(feature_col)
+    pred_list = []
+    for i in values["-FEATURE-"]:
+        input_col.append([sg.Text("{}".format(i)),sg.Input(key='{}'.format(i))])
+    layout = [
+        [sg.Text("Enter values to predict")],
+        *input_col,
+        [sg.Button("Predict",enable_events=True,size=(25,1),key="-DISP-")],
+        [sg.Text("",size=(50,1),key="-OUTPUT-")]
+    ]
+    window = sg.Window("Prediction Window",layout)
+    result_text = window["-OUTPUT-"]
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED,"Exit"):
+            break
+        if event == "-DISP-":
+            for column in feature_col: # normalising the data (Min-Max Scaling)
+                values[column] = ((float(values[column]) - df_max_scaled[column].min())/(df_max_scaled[column].max() - df_max_scaled[column].min()))
+            for i in feature_col:
+                pred_list.append(float(values[i]))
+            arr = np.array(pred_list)
+            arr_2d = np.reshape(arr, (1,cols))
+            predicted = mod.predict(arr_2d)
+            result_text.update("Predicted result is {}".format(predicted))
+
 
 # def handle_pycaret(values):
 #     if values["-MODEL_FIT-"] == "Classification":
 #         from pycaret.classification import setup,create_model,compare_models,plot_model
 #         clf1 = setup(df, target = values["-TARGET-"], session_id=786)
 #         extracted_model = compare_models()
-#         model = create_model(extract_model)
+#         model = create_model(extracted_model)
 #         plot_model(model)
 
 #     elif values["-MODEL_FIT-"] == "Regression":
 #         from pycaret.regression import setup,create_model,compare_models,plot_model
 #         reg1 = setup(df, target = values["-TARGET-"], session_id=786)
 #         extracted_model = compare_models()
-#         model = create_model(extract_model)
+#         model = create_model(extracted_model)
 #         plot_model(model)
 
 file_choose = [
@@ -169,6 +241,7 @@ file_choose = [
 
 tool_list = ['sweetviz','autoviz','pandas profiling']
 tool_choose = [
+    [sg.Text("   ")],
     [
         sg.Text("Choose Tool"),
         sg.Combo(tool_list,default_value='sweetviz',size=(25,1),

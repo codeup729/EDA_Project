@@ -13,6 +13,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from autoviz.AutoViz_Class import AutoViz_Class
 from lightgbm import LGBMClassifier as lgbmc
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
 
 def handle_tools():
     path_ht = values['-IN-']
@@ -184,6 +185,14 @@ def handle_model():
 
 
 def sklearn_model(values):
+    le = LabelEncoder() # to later check for encoded columns
+    for i,column in enumerate(df.columns):
+        if (type(df[column][0]) == str): # Encoding non-numeric columns with LabelEncoder
+            le = LabelEncoder()
+            cat_arr = df.iloc[:,i].values
+            cat_list = le.fit_transform(cat_arr)
+            df[column] = cat_list
+    
     X = df[list(values["-FEATURE-"])]
     y = df[values["-TARGET-"]]
     if values["-MODEL_FIT-"] == "Classification":

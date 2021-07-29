@@ -33,8 +33,19 @@ def handle_tools():
 
     # Autoviz library issues to be resolved
 
-def viz_window():
-    all_columns = list(df.columns)
+def viz_window(values):
+    path_vw = values['-IN-']
+    df_vw = pd.read_csv(path_vw)
+    df_vw = df_vw.select_dtypes([np.number]) # removing non-numeric columns
+    df_cleaned = df_vw.dropna()
+    df_max_scaled = df_cleaned.copy()
+    for column in df_vw.columns: # normalising the data (Min-Max Scaling)
+        df_max_scaled[column] = (df_max_scaled[column] - 
+        df_max_scaled[column].min())/(df_max_scaled[column].max() - 
+        df_max_scaled[column].min())
+    df1 = df_max_scaled # changed name to df1
+
+    all_columns = list(df1.columns)
     plot_list = ['scatter','line']
     layout = [
         [
@@ -64,13 +75,13 @@ def viz_window():
         if event in (sg.WIN_CLOSED, "Exit"):
             break
         if event == "-SHOW_PLT-":
-            handle_plot(values)
+            handle_plot(values,df1)
         #adds visualisation functionality with matplotlib
         
     window.close()
 
 
-def handle_plot(values):
+def handle_plot(values,df1):
     _VARS = {'window': False}
     layout = [
         [sg.Canvas(key='figCanvas')],
@@ -85,7 +96,7 @@ def handle_plot(values):
         plt.title('Scatter Plot')
         ax2 = ax.twinx()
         for i in range(len(list_val)):
-            ax.scatter(df[values["-X-"]], df[list_val[i]],label=list_val[i])
+            ax.scatter(df1[values["-X-"]], df1[list_val[i]],label=list_val[i])
         ax.set_xlabel(values["-X-"])
         ax.legend(loc='upper right')
         # Instead of plt.show
@@ -96,7 +107,7 @@ def handle_plot(values):
         plt.title('Line Plot')
         ax2 = ax.twinx()
         for i in range(len(list_val)):
-            ax.plot(df[values["-X-"]], df[list_val[i]],label=list_val[i])
+            ax.plot(df1[values["-X-"]], df1[list_val[i]],label=list_val[i])
         ax.set_xlabel(values["-X-"])
         ax.legend(loc='upper right')
          # Instead of plt.show
@@ -206,8 +217,8 @@ def sklearn_predict(mod,values):
         if event in (sg.WIN_CLOSED,"Exit"):
             break
         if event == "-DISP-":
-            for column in feature_col: # normalising the data (Min-Max Scaling)
-                values[column] = ((float(values[column]) - df_max_scaled[column].min())/(df_max_scaled[column].max() - df_max_scaled[column].min()))
+            # for column in feature_col: # normalising the data (Min-Max Scaling)
+            #     values[column] = ((float(values[column]) - df_max_scaled[column].min())/(df_max_scaled[column].max() - df_max_scaled[column].min()))
             for i in feature_col:
                 pred_list.append(float(values[i]))
             arr = np.array(pred_list)
@@ -281,18 +292,18 @@ while True:
     if event == '-FILE-':
         path = values['-IN-']
         df = pd.read_csv(path)
-        df = df.select_dtypes([np.number]) # removing non-numeric columns
-        df_cleaned = df.dropna()
-        df_max_scaled = df_cleaned.copy()
-        for column in df.columns: # normalising the data (Min-Max Scaling)
-            df_max_scaled[column] = (df_max_scaled[column] - 
-            df_max_scaled[column].min())/(df_max_scaled[column].max() - 
-            df_max_scaled[column].min())
-        df = df_max_scaled
+        # df = df.select_dtypes([np.number]) # removing non-numeric columns
+        # df_cleaned = df.dropna()
+        # df_max_scaled = df_cleaned.copy()
+        # for column in df.columns: # normalising the data (Min-Max Scaling)
+        #     df_max_scaled[column] = (df_max_scaled[column] - 
+        #     df_max_scaled[column].min())/(df_max_scaled[column].max() - 
+        #     df_max_scaled[column].min())
+        # df = df_max_scaled
     if event == '-EDA-':
         handle_tools()
     if event == '-VIZ-':
-        viz_window()
+        viz_window(values)
     if event == '-MODEL-':
         handle_model()
 

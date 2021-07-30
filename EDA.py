@@ -234,7 +234,7 @@ def sklearn_predict(mod,values):
             arr_2d = np.reshape(arr, (1,cols))
             predicted = mod.predict(arr_2d)
             result_text.update("Predicted result is {}".format(predicted))
-
+            pred_list = []
 
 # def handle_pycaret(values):
 #     if values["-MODEL_FIT-"] == "Classification":
@@ -251,11 +251,38 @@ def sklearn_predict(mod,values):
 #         model = create_model(extracted_model)
 #         plot_model(model)
 
+def show_table():
+    df_st = df.dropna()
+    data = df_st.values.tolist()
+    header_list = list(df.columns)
+
+
+    layout = [
+        [
+            sg.Table(values=data,
+                  headings=header_list,
+                  font='Helvetica',
+                  pad=(25,25),
+                  display_row_numbers=False,
+                  auto_size_columns=True,
+                  num_rows=min(25, len(data))) 
+        ]
+    ]
+    window = sg.Window("Dataset",layout,size=(1000,350))
+    while True:
+        event, values = window.read()
+        if event == sg.WIN_CLOSED:
+            break
+    window.close()
+
 file_choose = [
     [
         sg.Text("Data File"),
         sg.In(size=(25,1),enable_events=True,key="-FILE-"),
         sg.FileBrowse(key="-IN-")
+    ],
+    [
+        sg.Button("Show Data",enable_events=True,key="-SHOW-")
     ]
 ]
 
@@ -315,5 +342,7 @@ while True:
         viz_window(values)
     if event == '-MODEL-':
         handle_model()
+    if event == '-SHOW-':
+        show_table()
 
 window.close()

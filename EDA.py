@@ -6,8 +6,7 @@ import sweetviz as sv
 import os
 import webbrowser #for displaying pandas-profiling report on a separate page
 from pandas_profiling import ProfileReport
-# the crux of UI integration is that sometimes you have to have a bridge of sorts, 
-# helper methods or drop down to a level where both libraries can talk to each other, 
+# for UI integration a bridge/helper methods or drop down to a level where both libraries can talk to each other, 
 # in this case a tkinter canvas.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from autoviz.AutoViz_Class import AutoViz_Class
@@ -32,7 +31,7 @@ def handle_tools():
         design_report.to_file(output_file='report.html')
         webbrowser.open('file://' + os.path.realpath('report.html'))
 
-    # Autoviz library issues to be resolved
+    
 
 def viz_window(values):
     path_vw = values['-IN-']
@@ -44,20 +43,18 @@ def viz_window(values):
         df_max_scaled[column] = (df_max_scaled[column] - 
         df_max_scaled[column].min())/(df_max_scaled[column].max() - 
         df_max_scaled[column].min())
-    df1 = df_max_scaled # changed name to df1
+    df1 = df_max_scaled 
 
     all_columns = list(df1.columns)
     plot_list = ['scatter','line']
     layout = [
         [
-            sg.Text("X axis: "), # command-slash 
+            sg.Text("X axis: "), 
             sg.Combo(all_columns,default_value=all_columns[0],
             enable_events=True,key="-X-")
         ],
         [
             sg.Text("Y axis: "),
-            # sg.Combo(all_columns,default_value=all_columns[0],
-            # enable_events=True,key="-Y-")
             sg.Listbox(all_columns,default_values=[all_columns[0]],
             enable_events=True,select_mode='multiple',size=(25,1),key="-Y-")
         ],
@@ -181,7 +178,7 @@ def handle_model():
         if event == "-PREDICT-":
             sklearn_predict(mod,values)
     window.close()
-        #To add prediction functionalities 
+         
 
 
 def sklearn_model(values):
@@ -226,8 +223,7 @@ def sklearn_predict(mod,values):
         if event in (sg.WIN_CLOSED,"Exit"):
             break
         if event == "-DISP-":
-            # for column in feature_col: # normalising the data (Min-Max Scaling)
-            #     values[column] = ((float(values[column]) - df_max_scaled[column].min())/(df_max_scaled[column].max() - df_max_scaled[column].min()))
+            
             for i in feature_col:
                 pred_list.append(float(values[i]))
             arr = np.array(pred_list)
@@ -302,10 +298,6 @@ plot_choose = [
     [sg.Text("To Visualize:")],
     [sg.Button("Visualisation options",enable_events=True,
     key="-VIZ-")]
-
-        # sg.Text("X axis"), # command-slash 
-        # sg.Combo(all_columns,default_value=all_columns[0],
-        # enable_events=True,key="-X-"),
 ]
 
 
@@ -328,14 +320,7 @@ while True:
     if event == '-FILE-':
         path = values['-IN-']
         df = pd.read_csv(path)
-        # df = df.select_dtypes([np.number]) # removing non-numeric columns
-        # df_cleaned = df.dropna()
-        # df_max_scaled = df_cleaned.copy()
-        # for column in df.columns: # normalising the data (Min-Max Scaling)
-        #     df_max_scaled[column] = (df_max_scaled[column] - 
-        #     df_max_scaled[column].min())/(df_max_scaled[column].max() - 
-        #     df_max_scaled[column].min())
-        # df = df_max_scaled
+
     if event == '-EDA-':
         handle_tools()
     if event == '-VIZ-':

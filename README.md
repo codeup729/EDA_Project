@@ -1,5 +1,5 @@
 # EDA_Project
-An Application where users can perform EDA, visualize multiple features & predict target variables, all at one place using their datasets.
+An Application where users can utilize EDA tools, visualize multiple features & predict target variables, all at one place using their datasets.
 
 
 To Run:

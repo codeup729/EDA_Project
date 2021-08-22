@@ -24,7 +24,8 @@ def handle_tools():
 
     if values['-TOOL-']=='autoviz':
         AV = AutoViz_Class()
-        av = AV.AutoViz(path_ht,verbose=1)
+        av = AV.AutoViz(path_ht,verbose=2)
+        webbrowser.open('file://' + os.path.realpath('autoimages.html'))
 
     if values['-TOOL-']=='pandas profiling':
         design_report = ProfileReport(df_ht)
